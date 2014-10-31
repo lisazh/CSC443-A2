@@ -28,13 +28,24 @@ int main(int argc, const char* argv[]) {
     exit(1);
   }
 
-  // Print out the schema
+  // Print out the schema and init schema for later use
   string attr_name;
   int attr_len;
-  for (int i = 0; i < schema.size(); ++i) {
+  int schema_len = schema.size();
+
+  Schema *sm = (Schema *) malloc(sizeof(Schema));
+  sm->attrs = (Attribute *) malloc(sizeof(Attribute) * schema_len);
+  sm->sort_attrs = (int *) malloc(sizeof(int) * schema_len);
+
+  for (int i = 0; i < schema_len; ++i) {
     attr_name = schema[i].get("name", "UTF-8" ).asString();
     attr_len = schema[i].get("length", "UTF-8").asInt();
     cout << "{name : " << attr_name << ", length : " << attr_len << "}" << endl;
+
+    Attribute *attr = &(sm->attrs[i]);
+    attr->name = (char *) malloc(sizeof(char) * attr_name.size());
+    strcpy(attr->name, attr_name.c_str());
+    attr->length = attr_len;
   }
 
   // Do the sort

@@ -16,9 +16,9 @@ typedef struct {
  * `attrs` array).
  */
 typedef struct {
-  Attribute* attrs[];
+  Attribute* attrs;
   int nattrs;
-  int sort_attrs[];
+  int* sort_attrs;
   int n_sort_attrs;
 } Schema;
 
