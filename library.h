@@ -1,11 +1,4 @@
 #include <cstdio>
-#include <cstdio>
-#include <iostream>
-#include <fstream>
-
-#include "json/json.h"
-
-using namespace std;
 
 /**
  * An attribute schema. You should probably modify
@@ -37,11 +30,6 @@ typedef struct {
   Schema* schema;
   char* data;
 } Record;
-
-/**
- * Read the given schema file.
- */
-void read_schema_file(const char *schema_file, Schema *sm);
 
 /**
  * Creates sorted runs of length `run_length` in
