@@ -1,4 +1,4 @@
-import random, csv, string
+import random, csv, string, uuid
 from decimal import *
 
 TYPE = 'type'
@@ -58,7 +58,7 @@ def generate_data(schema, out_file, nrecords):
 def create_string_attr(attr_def):
   length = attr_def[LENGTH]
   if (attr_def[ID] == 'y'):
-    return str(SequenceGenerator.next_value()).zfill(length)
+    return str(uuid.uuid4().int)[:length].zfill(length)
   else:
     return ''.join(random.choice(string.letters + string.digits) for i in range(length))
 
@@ -89,14 +89,6 @@ def create_float_attr(attr_def):
   else:
     print 'Unsupported attribute distribution %s for float' % dist_def[DIST_NAME]
     sys.exit(2)
-
-class SequenceGenerator:
-  count = 0
-
-  @classmethod
-  def next_value(self):
-    SequenceGenerator.count += 1
-    return SequenceGenerator.count
 
 if __name__ == '__main__':
   import sys, json

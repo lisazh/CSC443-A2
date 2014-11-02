@@ -38,6 +38,9 @@ int main(int argc, const char* argv[]) {
         key_attr[i] = schema[i].get("id", "UTF-8").asString().compare("y");
     }
 
+    //start timer
+    clock_t start = clock();
+
     leveldb::DB *db;
     leveldb::Options options;
     options.create_if_missing = true;
@@ -79,6 +82,9 @@ int main(int argc, const char* argv[]) {
     delete it;
 
     myfile.close();
+
+    int msecTime = (clock() - start) * 1000 / CLOCKS_PER_SEC;
+    fprintf(stdout, "TIME: %d milliseconds\n", msecTime);
 
     return 0;
 }
