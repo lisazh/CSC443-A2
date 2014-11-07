@@ -11,13 +11,14 @@ using namespace std;
 
 int main(int argc, const char* argv[]) {
 
-    if (argc != 4) {
+    if (argc < 5) {
         cout << "ERROR: invalid input parameters!" << endl;
-        cout << "Please enter <schema_file> <input_file> <out_index>" << endl;
+        cout << "Please enter <schema_file> <input_file> <out_index> <sorting_attributes>" << endl;
         exit(1);
     }
 
     string schema_file(argv[1]);
+    int sort_attr[argc - 4];
 
     // Parse the schema JSON file
     Json::Value schema;
@@ -32,10 +33,17 @@ int main(int argc, const char* argv[]) {
     }
 
     int schema_len = schema.size();
-    int key_attr[schema_len];
 
-    for (int i = 0; i < schema_len; ++i) {
-        key_attr[i] = schema[i].get("id", "UTF-8").asString().compare("y");
+    for (int i = 4; i < argc; i++) {
+        for (int j = 0; j < schema_len; j++) {
+            if (!schema[j].get("name", "UTF-8").asString().compare(argv[i])) {
+                sort_attr[i - 4] = j;
+                break;
+            } else if (j == schema_len - 1) {
+                cout << "ERROR: invalid sorting attribute " << "\"" << argv[i] << "\"" << endl;
+                exit(1);
+            }
+        }
     }
 
     //start timer
@@ -52,21 +60,35 @@ int main(int argc, const char* argv[]) {
 
     in_stream.open(argv[2]);
 
-    while(!in_stream.eof())
-    {
+    int count = 0;
+
+    while(1) {
         in_stream >> line;
+        if (in_stream.eof()) {
+            break;
+        }
+
         string attr;
+        vector<string> attrs;
         string key;
         stringstream stream(line);
+
         for (int i = 0; getline(stream, attr, ','); i++) {
-            if (!key_attr[i]) {
-                key.append(attr);
-            }
+            attrs.push_back(attr);
         }
+
+        for (int i = 0; i < argc - 4; i++) {
+            key.append(attrs.at(sort_attr[i]));
+        }
+
+        key.append(to_string(count));
+        count++;
+
         leveldb::Slice db_key = key;
         leveldb::Slice value = string(line);
-        db->Put(leveldb::WriteOptions(), db_key, value); 
+        db->Put(leveldb::WriteOptions(), db_key, value);
     }
+
     ofstream myfile;
     myfile.open (argv[3]);
 
@@ -76,15 +98,19 @@ int main(int argc, const char* argv[]) {
         leveldb::Slice value = it->value();
         std::string key_str = key.ToString();
         std::string val_str = value.ToString();
-        myfile << key_str << ": "  << val_str << endl;
+
+        myfile << val_str << endl;
+
+        db->Delete(leveldb::WriteOptions(), key);
     }
     assert(it->status().ok());  // Check for any errors found during the scan
     delete it;
+    delete db;
 
     myfile.close();
 
     int msecTime = (clock() - start) * 1000 / CLOCKS_PER_SEC;
-    fprintf(stdout, "TIME: %d milliseconds\n", msecTime);
+    fprintf(stdout, "Sorted %d records in %d milliseconds\n", count, msecTime);
 
     return 0;
 }
