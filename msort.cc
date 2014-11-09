@@ -2,11 +2,16 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <cmath>
+#include <unistd.h>
 
 #include "library.h"
 #include "json/json.h"
 
 using namespace std;
+
+const char *pass0 = "pass0";
+const char *pass1 = "pass1";
 
 int main(int argc, const char* argv[]) {
   if (argc < 7) {
@@ -62,57 +67,149 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  
-  // Do the sort
-  // Your implementation
+  //start timer
+  clock_t start = clock();
 
-  // FILE *in_fp = fopen(argv[2], "r");
-  // if (in_fp == NULL) {
-  //   cout << "ERROR: fail to open input file" << endl;
-  // }
+  std::ifstream f(argv[2]);
+  std::string line;
+  int num_records = 0;
+  for (int i = 0; std::getline(f, line); ++i) {
+    num_records++;
+  }
 
-  // FILE *out_fp = fopen(argv[3], "w");
-  // if (out_fp == NULL) {
-  //   cout << "ERROR: fail to create output file" << endl;
-  // }
+  FILE *in_fp = fopen(argv[2], "r");
+  if (in_fp == NULL) {
+    cout << "ERROR: fail to open input file" << endl;
+    exit(1);
+  }
 
-  // mk_runs(in_fp, out_fp, 30, sm);
-  // fclose(in_fp);
-  // fclose(out_fp);
+  FILE *pass0_fp = fopen(pass0, "w");
+  if (pass0_fp == NULL) {
+    cout << "ERROR: fail to create pass0 file" << endl;
+    exit(1);
+  }
 
-  // FILE *run_fp = fopen(argv[3], "r");
-  // if (run_fp == NULL) {
-  //   cout << "ERROR: fail to create output file" << endl;
-  // }
+  int line_length = get_line_length(sm);
+  int mem_capacity = atoi(argv[4]);
+  int run_length = mem_capacity / line_length;
+  mk_runs(in_fp, pass0_fp, run_length, sm);
+  fclose(pass0_fp);
 
-  // cout << "Number of sort attr: " << sm->n_sort_attrs << endl;
-  // for (int i = 0; i < sm->n_sort_attrs; i++) {
-  //   cout << "Sorting on attr: " << sm->sort_attrs[i] << endl;
-  // }
-  // for (int i = 0; i < sm->nattrs; ++i) {
-  //   Attribute *attr = &(sm->attrs[i]);
-  //   cout << "{name: " << attr->name << ", length: " << attr->length << "}" << endl;
-  // }
+  int turn = 1;
 
-  // RunIterator *runIterator[4];
+  FILE *in;
+  FILE *out;
 
-  // out_fp = fopen("final_output.csv", "w");
-  // if (out_fp == NULL) {
-  //   cout << "ERROR: fail to create output file" << endl;
-  // }
+  int k = atoi(argv[5]);
+  if (k <= 1) {
+    cout << "ERROR: <k> has to be greater than 1" << endl;
+    exit(1);
+  }
+  if (mem_capacity < (line_length + 1) * (k + 1)) {
+    cout << "ERROR: <mem_capacity> not enough, please have bigger <mem_capacity> or smaller <k>" << endl;
+    exit(1);
+  }
+  long buf_size = mem_capacity / (k + 1);
 
-  // runIterator[0] = new RunIterator(run_fp, 0, 30, 100, sm);
-  // runIterator[1] = new RunIterator(run_fp, 30, 30, 100, sm);
-  // runIterator[2] = new RunIterator(run_fp, 60, 30, 100, sm);
-  // runIterator[3] = new RunIterator(run_fp, 90, 10, 100, sm);
+  FILE *out_fp = fopen(argv[3], "w");
+  if (out_fp == NULL) {
+    cout << "ERROR: fail to create output file" << endl;
+  }
 
-  // char * buf = (char *) malloc(100);
+  while (1) {
+    int merge_length = k * run_length;
+    int num_merge = ceil((double) num_records / merge_length);
+    int last_merge = num_records % merge_length;
 
-  // merge_runs(runIterator, 4, out_fp, 0, buf, 100);
+    if (turn) {
+      in = fopen(pass0, "r");
+      if (in == NULL) {
+        cout << "ERROR: fail to open input file" << endl;
+        exit(1);
+      };
+      out = fopen(pass1, "w");
+      if (out == NULL) {
+        cout << "ERROR: fail to open input file" << endl;
+        exit(1);
+      };
+      turn = 0;
+    } else {
+      in = fopen(pass1, "r");
+      if (in == NULL) {
+        cout << "ERROR: fail to open input file" << endl;
+        exit(1);
+      };
+      out = fopen(pass0, "w");
+      if (out == NULL) {
+        cout << "ERROR: fail to open input file" << endl;
+        exit(1);
+      };
+      turn = 1;
+    }
 
-  // free(buf);
-  // fclose(run_fp);
-  // fclose(out_fp);
+    if (num_merge <= k - 1) {
+      fclose(out);
+      out = out_fp;
+    }
+
+    for (int i = 0; i < num_merge; i++) {
+      int start_pos = i * merge_length;
+
+      if (i == num_merge - 1) {
+        /* Last merge */
+        int num_run = ceil((double) last_merge / run_length);
+        int last_run = last_merge % run_length;
+
+        RunIterator *runIterator[num_run];
+        for (int j = 0; j < num_run; j++) {
+          if (j == num_run - 1) {
+            /* Last run */
+            runIterator[j] = new RunIterator(in, start_pos, last_run, buf_size, sm);
+          } else {
+            runIterator[j] = new RunIterator(in, start_pos, run_length, buf_size, sm);
+            start_pos += run_length;
+          }
+        }
+        char *buf = (char *) malloc(buf_size);
+        merge_runs(runIterator, num_run, out, i * merge_length, buf, buf_size);
+        free(buf);
+      } else {
+        RunIterator *runIterator[k];
+        for (int j = 0; j < k; j++) {
+          runIterator[j] = new RunIterator(in, start_pos, run_length, buf_size, sm);
+          start_pos += run_length;
+        }
+        char *buf = (char *) malloc(buf_size);
+        merge_runs(runIterator, k, out, i * merge_length, buf, buf_size);
+        free(buf);
+      }
+    }
+    fclose(in);
+    fclose(out);
+
+    /* Update run length */
+    if (num_merge > k - 1) {
+      run_length *= k;
+    } else {
+      break;
+    }
+  }
+
+  fclose(in_fp);
+  unlink(pass0);
+  unlink(pass1);
+  fclose(out_fp);
+
+  for (int i = 0; i < schema_len; ++i) {
+    Attribute *attr = &(sm->attrs[i]);
+    free(attr->name);
+  }
+  free(sm->attrs);
+  free(sm->sort_attrs);
+  free(sm);
+
+  int msecTime = (clock() - start) * 1000 / CLOCKS_PER_SEC;
+  fprintf(stdout, "Sorted %d records in %d milliseconds\n", num_records, msecTime);
 
   return 0;
 }

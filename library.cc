@@ -96,13 +96,6 @@ string get_sort_attrs(Record *record, Schema *schema) {
 void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
                 long start_pos, char *buf, long buf_size)
 {
-    // int count = 1;
-    // for (int i = 0; i < num_runs; i++) {
-    //     while (iterators[i]->has_next()) {
-    //       cout << count++ << ": " << runIterator[i]->next()->data << endl;
-    //     }
-    // }
-    fseek(out_fp, start_pos, SEEK_SET);
     Record *records = (Record *) malloc(num_runs * sizeof(Record));
     Record *r;
     int alive_runs = num_runs;
@@ -125,6 +118,7 @@ void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
             alive[i] = 0;
         }
     }
+    fseek(out_fp, start_pos * (line_length + 1), SEEK_SET);
 
     hold_records = buf_size / (line_length + 1);
 
@@ -132,7 +126,6 @@ void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
         num_records += 1;
         Record smallest_record = records[0];
         int smallest = 0;
-
         for (int i = 1; i < num_runs; i++) {
             if (!alive[smallest] || (alive[i] && compare_records(&smallest_record, &(records[i])) > 0)) {
                 smallest_record = records[i];
@@ -147,8 +140,6 @@ void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
         strncpy(buf + offset * (line_length + 1), smallest_record.data, line_length);
         memset(buf + offset * (line_length + 1) + line_length, '\n', 1);
         offset++;
-        cout << num_records << ": " << smallest_record.data << endl;
-
         free(smallest_record.data);
 
         if (iterators[smallest]->has_next()) {
@@ -160,10 +151,8 @@ void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
             alive_runs--;
             alive[smallest] = 0;
         }
-
     }
     fwrite(buf, (line_length + 1) * offset, 1, out_fp);
-    cout << "num_records is " << num_records << endl;
     free(records);
 }
 
