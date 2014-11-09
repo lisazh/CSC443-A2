@@ -197,8 +197,8 @@ int main(int argc, const char* argv[]) {
   }
 
   // fclose(in_fp);
-  // unlink(pass0);
-  // unlink(pass1);
+  unlink(pass0);
+  unlink(pass1);
   // fclose(out_fp);
 
   for (int i = 0; i < schema_len; ++i) {
