@@ -42,6 +42,18 @@ void mk_runs(FILE *in_fp, FILE *out_fp, long run_length, Schema *schema);
  * you can add additional members as your wish
  */
 class RunIterator {
+private:
+  char *records;
+  FILE *file;
+  int cur_pos;
+  int iter_start_pos;
+  int iter_run_length;
+  long iter_buf_size;
+  int line_length;
+  int hold_records;
+  Schema *iter_schema;
+
+public:
   /**
    * Creates an interator using the `buf_size` to
    * scan through a run that starts at `start_pos`
@@ -75,4 +87,6 @@ class RunIterator {
  */
 void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
                 long start_pos, char *buf, long buf_size);
+
+int get_line_length(Schema *schema);
 
