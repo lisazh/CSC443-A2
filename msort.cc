@@ -196,7 +196,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  // fclose(in_fp);
+  fclose(in_fp);
   unlink(pass0);
   unlink(pass1);
   // fclose(out_fp);
