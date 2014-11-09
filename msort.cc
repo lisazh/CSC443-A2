@@ -201,13 +201,13 @@ int main(int argc, const char* argv[]) {
   unlink(pass1);
   fclose(out_fp);
 
-  for (int i = 0; i < schema_len; ++i) {
-    Attribute *attr = &(sm->attrs[i]);
-    free(attr->name);
-  }
-  free(sm->attrs);
-  free(sm->sort_attrs);
-  free(sm);
+  // for (int i = 0; i < schema_len; ++i) {
+  //   Attribute *attr = &(sm->attrs[i]);
+  //   free(attr->name);
+  // }
+  // free(sm->attrs);
+  // free(sm->sort_attrs);
+  // free(sm);
 
   int msecTime = (clock() - start) * 1000 / CLOCKS_PER_SEC;
   fprintf(stdout, "Sorted %d records in %d milliseconds\n", num_records, msecTime);
