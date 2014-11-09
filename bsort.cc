@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
+#include <stdlib.h>
 
 #include "leveldb/db.h"
 #include "json/json.h"
@@ -60,7 +60,6 @@ int main(int argc, const char* argv[]) {
     string line;
 
     in_stream.open(argv[2]);
-
     int count = 0;
 
     while(1) {
@@ -81,8 +80,9 @@ int main(int argc, const char* argv[]) {
         for (int i = 0; i < argc - 4; i++) {
             key.append(attrs.at(sort_attr[i]));
         }
-
-        key.append(to_string(count));
+        stringstream ss;
+        ss << count;
+        key.append(ss.str().c_str());
         count++;
 
         leveldb::Slice db_key = key;
