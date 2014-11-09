@@ -100,7 +100,7 @@ void merge_runs(RunIterator* iterators[], int num_runs, FILE *out_fp,
     Record *r;
     int alive_runs = num_runs;
     int hold_records;
-    int line_length;
+    int line_length = 0;
     int offset = 0;
     int alive[num_runs];
     int num_records = 0;

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cmath>
 #include <unistd.h>
+#include <cstring>
 
 #include "library.h"
 #include "json/json.h"
