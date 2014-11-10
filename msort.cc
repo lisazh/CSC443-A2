@@ -148,7 +148,7 @@ int main(int argc, const char* argv[]) {
       turn = 1;
     }
 
-    if (num_merge <= k - 1) {
+    if (num_merge == 1) {
       fclose(out);
       out = out_fp;
     }
@@ -189,7 +189,7 @@ int main(int argc, const char* argv[]) {
     fclose(out);
 
     /* Update run length */
-    if (num_merge > k - 1) {
+    if (num_merge != 1) {
       run_length *= k;
     } else {
       break;
