@@ -17,9 +17,10 @@ echo "Testing performance of msort with poorly chosen parameters against differe
 ./msort newschema.json bigdata bigpoormsort 6000 100 student_number
 
 echo "Testing performance of msort with well tuned parameters against different file sizes"
- 
-./msort newschema.json smalldata smallwellmsort 6000 100 student_number 
 
-./msort newschema.json meddata medwellmsort 6000 100 student_number
+./msort newschema.json smalldata smallwellmsort 6000 2 student_number 
 
-./msort newschema.json bigdata bigwellmsort 6000 100 student_number 
+./msort newschema.json meddata medwellmsort 6000 2 student_number
+
+./msort newschema.json bigdata bigwellmsort 600000 2 student_number 
+
